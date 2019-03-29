@@ -31,7 +31,7 @@ from wasserstein_fairness import optimal_transport
 
 
 def gradient_smoothed_logistic(dataframes_all_data, dataframes_protected,
-                               theta, lambda_, beta,
+                               theta, lambda_, beta, alpha,
                                distance='wasserstein-2', delta=0.1,
                                baryscore=None):
   """Calculate parameter gradient for Wasserstein-fair logistic regression.
@@ -53,6 +53,9 @@ def gradient_smoothed_logistic(dataframes_all_data, dataframes_protected,
     theta: Regression parameters; a vector of length N or N+1.
     lambda_: A regulariser for computing the Wasserstein coupling.
     beta: Penalisation weight for the Wasserstein fairness loss.
+    alpha: Tradeoff penalty weight between regression loss(/gradient) and
+        the Wasserstein loss(/gradient):
+        `loss = alpha * logistic_loss + (1-alpha) * beta * Wasserstein_loss`.
     distance: selects the distribution distance to use for computing fairness
         gradients and costs. Valid values are 'wasserstein-1' and
         'wasserstein-2'.
@@ -82,12 +85,12 @@ def gradient_smoothed_logistic(dataframes_all_data, dataframes_protected,
     return coupling
 
   return _gradient_function_core(
-      dataframes_all_data, dataframes_protected, theta, get_coupling, beta,
-      distance, delta, baryscore)
+      dataframes_all_data, dataframes_protected, theta, get_coupling,
+      beta, alpha, distance, delta, baryscore)
 
 
 def gradient_line_logistic(dataframes_all_data, dataframes_protected,
-                           theta, beta,
+                           theta, beta, alpha,
                            distance='wasserstein-2', delta=0.1, baryscore=None):
   """Calculate parameter gradient for Wasserstein-fair logistic regression.
 
@@ -107,6 +110,9 @@ def gradient_line_logistic(dataframes_all_data, dataframes_protected,
         entries concerning members of protected categories, etc.
     theta: Regression parameters; a vector of length N or N+1.
     beta: Penalisation weight for the Wasserstein fairness loss.
+    alpha: Tradeoff penalty weight between regression loss(/gradient) and
+        the Wasserstein loss(/gradient):
+        `loss = alpha * logistic_loss + (1-alpha) * beta * Wasserstein_loss`.
     distance: selects the distribution distance to use for computing fairness
         gradients and costs. Valid values are 'wasserstein-1' and
         'wasserstein-2'.
@@ -127,12 +133,12 @@ def gradient_line_logistic(dataframes_all_data, dataframes_protected,
         outputs_all_data, op)
 
   return _gradient_function_core(
-      dataframes_all_data, dataframes_protected, theta, get_coupling, beta,
-      distance, delta, baryscore)
+      dataframes_all_data, dataframes_protected, theta, get_coupling,
+      beta, alpha, distance, delta, baryscore)
 
 
 def _gradient_function_core(dataframes_all_data, dataframes_protected,
-                            theta, get_coupling, beta, distance, delta,
+                            theta, get_coupling, beta, alpha, distance, delta,
                             baryscore):
   """Common implementation for both `gradient_*` functions.
 
@@ -150,6 +156,9 @@ def _gradient_function_core(dataframes_all_data, dataframes_protected,
         This function should return an NxM coupling matrix, which can be a
         scipy.sparse matrix if desired.
     beta: Penalisation weight for the Wasserstein fairness loss.
+    alpha: Tradeoff penalty weight between regression loss(/gradient) and
+        the Wasserstein loss(/gradient):
+        `loss = alpha * logistic_loss + (1-alpha) * beta * Wasserstein_loss`.
     distance: selects the distribution distance to use for computing fairness
         gradients and costs. Valid values are 'wasserstein-1' and
         'wasserstein-2'.
@@ -256,5 +265,5 @@ def _gradient_function_core(dataframes_all_data, dataframes_protected,
   # All done. Totalise and return.
   logging.debug('   logistic cost: %f', cost_logistic)
   logging.debug('wasserstein cost: %f', cost_wasserstein)
-  return (grad_logistic + beta * grad_wasserstein,
+  return (alpha * grad_logistic + (1 - alpha) * beta * grad_wasserstein,
           cost_logistic, cost_wasserstein)
