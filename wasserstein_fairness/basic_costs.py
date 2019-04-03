@@ -105,7 +105,7 @@ def wasserstein_two_loss_gradient(x1, x2, coupling, theta):
   return term_1 + term_2 + term_3
 
 
-def wass_barycenter_loss_gradient(b, x2, coupling, theta, delta):
+def wass_one_barycenter_loss_gradient(b, x2, coupling, theta, delta):
   """Gradient of the Wass1 barycenter loss with respect to theta.
 
   Args:

@@ -169,9 +169,10 @@ def _gradient_function_core(dataframes_all_data, dataframes_protected,
     baryscore: (d,) array that distributes as the barycenter of distributions.
 
   Returns:
-      A 2-tuple with the following members:
+      A 3-tuple with the following members:
       [0]: Wasserstein-fair logistic regression gradient.
-      [1]: Current objective function cost.
+      [1]: Regression objective cost.
+      [2]: Wasserstein objective cost, unscaled (i.e. not multiplied by beta.)
 
   Raises:
     ValueError: unrecognised distance type specified for `distance`.
